@@ -11,6 +11,7 @@ maxIterations = 1000
 def kmeans(data, k):
     data = data.select_dtypes(include=['int64', 'float64']).to_numpy()
     sample_numbers = np.random.choice(len(data), size=k)
+    centroidProgression = []
     centroids = np.array(data[sample_numbers])
     centroids.sort(0)
     
@@ -19,6 +20,7 @@ def kmeans(data, k):
     objVals = []
     
     while not shouldStop(oldCentroids, centroids, iterations):
+        centroidProgression.append(centroids)
         oldCentroids = np.array(centroids)
         iterations += 1
 
@@ -26,7 +28,7 @@ def kmeans(data, k):
         objVals.append(val)
         
         centroids = updateCentroids(data, labels, k)
-    return centroids, objVals
+    return centroids, objVals, centroidProgression
 
 # stop algorithm if there are too many iterations, or if centroids do not change
 def shouldStop(oldCentroids, centroids, iterations):
@@ -51,6 +53,7 @@ def getLabels(data, centroids):
         val += minDist
     return labels, val
   
+# update centroids as mean of points in each class
 def updateCentroids(data, labels, k):
     newCentroids = []
     for i in range(k):
@@ -73,13 +76,93 @@ def eucDist(p1, p2):
 
 def main():
     k = 2
-    clusters, objValues = kmeans(iris_data, k)
-    plt.plot(range(1,len(objValues)+1), objValues, marker="o")
-    plt.xticks(range(1,len(objValues)+1))
-    plt.ylabel("Objective Function Value")
-    plt.xlabel("Iteration")
-    plt.title("Learning Curve for K = " + str(k))
+    clusters, objValues, centroidProgress = kmeans(iris_data, k)
+    
+    '''
+    1d.
+    '''
+    converged = []
+    for i in range(len(centroidProgress[0])):
+        converged.append(clusters[i][2:4])
+        
+    plt.scatter(iris_data["petal_length"], iris_data["petal_width"])
+    cX = []
+    cY = []
+    for i in range(len(converged)):
+        cX.append(converged[i][0])
+        cY.append(converged[i][1])
+    # calculate slope and midpoint of line between centroids 
+    m = []
+    midpt = []
+    for i in range(len(converged)-1):
+        x1 = converged[i][0]
+        x2 = converged[i+1][0]
+        y1 = converged[i][1]
+        y2 = converged[i+1][1]
+        m.append((y2-y1)/(x2-x1))
+        midpt.append([(x1+x2)/2, (y1+y2)/2])
+    m = np.array(m)
+    m *= -1
+    np.power(m, -1)
+    print(m)
+    print(midpt)
+    plt.plot(cX, cY, color="fuchsia",  marker='*', ls='none', ms=20, label="Converged")
+    for i in range(len(m)):
+        plt.axline(midpt[i], slope=m[i], color="red")
+    plt.legend(loc="upper left")
+    plt.xlabel("Petal Length")
+    plt.ylabel("Petal Width")
+    plt.title("Decision Boundaries for K = " + str(k))
+    
     plt.show()
+    
+    '''
+    1c.
+    '''
+    # beginning = []
+    # intermediate = []
+    # converged = []
+    # print(clusters)
+    # for i in range(len(centroidProgress[0])):
+    #     beginning.append(centroidProgress[0][i][2:4])
+    #     intermediate.append(centroidProgress[int(len(centroidProgress)/2)][i][2:4])
+    #     converged.append(clusters[i][2:4])
+        
+    # plt.scatter(iris_data["petal_length"], iris_data["petal_width"])
+    # bX = []
+    # bY = []
+    # iX = []
+    # iY = []
+    # cX = []
+    # cY = []
+    # for i in range(len(beginning)):
+    #     bX.append(beginning[i][0])
+    #     bY.append(beginning[i][1])
+    #     iX.append(intermediate[i][0])
+    #     iY.append(intermediate[i][1])
+    #     cX.append(converged[i][0])
+    #     cY.append(converged[i][1])
+    # plt.plot(bX, bY, color="black",  marker='*', ls='none', ms=20, label="Beginning")
+    # plt.plot(iX, iY, color="lime",  marker='*', ls='none', ms=20, label="Intermediate")
+    # plt.plot(cX, cY, color="fuchsia",  marker='*', ls='none', ms=20, label="Converged")
+    # plt.legend(loc="upper left")
+    # plt.xlabel("Petal Length")
+    # plt.ylabel("Petal Width")
+    # plt.title("Cluster Center Progression for K = " + str(k))
+    
+    # plt.show()
+    
+    '''
+    1b.
+    '''
+    # plt.plot(range(1,len(objValues)+1), objValues, marker="o")
+    # plt.xticks(range(1,len(objValues)+1))
+    # plt.ylabel("Objective Function Value")
+    # plt.xlabel("Iteration")
+    # plt.title("Learning Curve for K = " + str(k))
+    # plt.show()
+    
+    
     
 if __name__ == "__main__":
     main()
