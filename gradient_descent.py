@@ -1,4 +1,4 @@
-import exercise2 as e2
+import IrisClassification.neural_network as e2
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
